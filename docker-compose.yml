@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - consul
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    ports:
+      - "9100:9100"
+
+  process-exporter:
+    image: ncabatoff/process-exporter:latest
+    container_name: process-exporter
+    ports:
+      - "9256:9256"
+    volumes:
+      - ./process-exporter/config.yml:/config.yml
+    command:
+      - "--config.path=/config.yml"
+
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"     
+      - "8600:8600/udp" 
+      - "8300:8300"     
+      - "8400:8400"     
+      - "8301:8301"     
+    command: "agent -server -bootstrap -ui -client=0.0.0.0 -config-dir=/consul/config"
+    volumes:
+      - ./consul:/consul/config
+
+volumes:
+  grafana_data:
+
